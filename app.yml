@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://schemas.pennsieve.io/app-manifest/v1.json
+schemaVersion: "1.0"
+application:
+  name: Test Ports Processor
+  description: >-
+    A test app with two inputs and two outputs, for trying workflows that link
+    a step's outputs to another step's inputs. It reports where each input's
+    files arrived and copies them on.
+  type: processor
+  tags:
+    - testing
+runtime:
+  cpu: 256
+  memory: 512
+  computeTypes:
+    - standard
+parameters:
+  - name: FAIL_IF_MISSING
+    type: boolean
+    description: >-
+      Fail the run when an input has no files, instead of reporting it as
+      missing.
+    defaultValue: false
+# The two inputs take different media types, so they can share the root of
+# INPUT_DIR. The app also finds an input in INPUT_DIR/<name>/ when the
+# workflow places it in its own folder.
+inputs:
+  - name: signals
+    description: Signal tables, as CSV files.
+    mediaTypes:
+      - text/csv
+    required: true
+  - name: events
+    description: Event lists, as JSON files.
+    mediaTypes:
+      - application/json
+    required: true
+# Two outputs: each is written to its own folder, OUTPUT_DIR/<name>/.
+outputs:
+  - name: summary
+    description: report.json, saying which files each input received and where they were found.
+    mediaTypes:
+      - application/json
+  - name: copies
+    description: >-
+      Each input's files, copied to copies/<input>/, so a following step can
+      take them as its own input.
+    mediaTypes:
+      - text/csv
+      - application/json
