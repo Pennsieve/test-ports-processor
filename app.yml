@@ -21,19 +21,22 @@ parameters:
       Fail the run when an input has no files, instead of reporting it as
       missing.
     defaultValue: false
-# The two inputs take different media types, so they can share the root of
-# INPUT_DIR. The app also finds an input in INPUT_DIR/<name>/ when the
-# workflow places it in its own folder.
+# Each input in its own folder: INPUT_DIR/signals/ and INPUT_DIR/events/
+# (placement: subfolder), so a workflow can feed each from a different step.
+# The app also finds an input's files at the root of INPUT_DIR, by extension,
+# when run without links (or on an older compute node).
 inputs:
   - name: signals
     description: Signal tables, as CSV files.
     mediaTypes:
       - text/csv
+    placement: subfolder
     required: true
   - name: events
     description: Event lists, as JSON files.
     mediaTypes:
       - application/json
+    placement: subfolder
     required: true
 # Two outputs: each is written to its own folder, OUTPUT_DIR/<name>/.
 outputs:

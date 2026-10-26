@@ -11,9 +11,10 @@ where each input's files arrived and copies them on.
 | `signals` | CSV files (`text/csv`) | `INPUT_DIR/signals/` if that folder exists, else the `.csv` files at the root of `INPUT_DIR` |
 | `events` | JSON files (`application/json`) | `INPUT_DIR/events/` if that folder exists, else the `.json` files at the root of `INPUT_DIR` |
 
-The two inputs take different media types, so they can share the root of
-`INPUT_DIR`. When a workflow places an input in its own folder
-(`placement: subfolder`), the app finds it there.
+Both inputs have `placement: subfolder`: a workflow that links them gives the
+app `INPUT_DIR/signals/` and `INPUT_DIR/events/`, each from its own step or
+data source. Without links (or on a compute node from before linked inputs),
+the files arrive at the root, where the app finds them by extension.
 
 ## Outputs
 
