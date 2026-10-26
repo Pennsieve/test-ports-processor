@@ -22,7 +22,7 @@ With two outputs, each is written to its own folder:
 
 | Output | Holds |
 |---|---|
-| `summary` | `OUTPUT_DIR/summary/report.json`: the whole input tree, the files each input received and where they were found (`signals/`, `root` or `missing`), and files no input claims |
+| `summary` | `OUTPUT_DIR/summary/report.json`: the whole input tree, the files each input received and where they were found (`signals/`, `root` or `missing`), files no input claims, and whether the step was given LLM access (`llmAccess`; this app doesn't declare `runtime.llm`, so it shouldn't be) |
 | `copies` | `OUTPUT_DIR/copies/signals/…` and `OUTPUT_DIR/copies/events/…`: each input's files, copied on |
 
 Linking `copies` to another `test-ports-processor` step gives that step

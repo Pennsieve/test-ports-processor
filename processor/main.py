@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import shutil
+import socket
 import sys
 from datetime import datetime, timezone
 
@@ -37,6 +38,24 @@ def tree(root):
             path = os.path.join(dirpath, name)
             files.append({"path": os.path.relpath(path, root), "bytes": os.path.getsize(path)})
     return sorted(files, key=lambda f: f["path"])
+
+
+def llm_access():
+    """
+    Whether the step was given LLM access. This app doesn't declare
+    runtime.llm, so on a node with opt-in LLM access all three are false.
+    """
+    sidecar = False
+    try:
+        with socket.create_connection(("127.0.0.1", 8765), timeout=1):
+            sidecar = True
+    except OSError:
+        pass
+    return {
+        "LLM_GOVERNOR_FUNCTION_NAME": bool(os.environ.get("LLM_GOVERNOR_FUNCTION_NAME")),
+        "ANTHROPIC_BASE_URL": bool(os.environ.get("ANTHROPIC_BASE_URL")),
+        "sidecarListening": sidecar,
+    }
 
 
 def find_input(input_dir, name, extensions):
@@ -74,6 +93,7 @@ def main():
         "outputDir": output_dir,
         "inputTree": tree(input_dir),
         "inputs": {},
+        "llmAccess": llm_access(),
     }
 
     for name in OUTPUTS:
@@ -108,6 +128,7 @@ def main():
             log.info("  %s", path)
     if report["unclaimed"]:
         log.info("files no input claims: %s", ", ".join(report["unclaimed"]))
+    log.info("LLM access (expected none, the app doesn't declare it): %s", report["llmAccess"])
     log.info("wrote %s", os.path.join(output_dir, "summary", "report.json"))
 
     if missing:
