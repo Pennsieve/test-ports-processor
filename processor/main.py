@@ -21,6 +21,9 @@ from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger("test-ports-processor")
+# The Lambda runtime configures the root logger before basicConfig can, at
+# WARNING, so the report's INFO lines would be lost without this.
+log.setLevel(logging.INFO)
 
 # Each input: its file extensions, for finding it at the root of INPUT_DIR.
 INPUTS = {
@@ -91,6 +94,7 @@ def main():
         "at": datetime.now(timezone.utc).isoformat(),
         "inputDir": input_dir,
         "outputDir": output_dir,
+        "runtime": "lambda" if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else "container",
         "inputTree": tree(input_dir),
         "inputs": {},
         "llmAccess": llm_access(),
@@ -121,7 +125,7 @@ def main():
     with open(os.path.join(output_dir, "summary", "report.json"), "w") as out:
         json.dump(report, out, indent=2)
 
-    log.info("INPUT_DIR %s holds %d files", input_dir, len(report["inputTree"]))
+    log.info("running as a %s; INPUT_DIR %s holds %d files", report["runtime"], input_dir, len(report["inputTree"]))
     for name, found in report["inputs"].items():
         log.info("input %s: %d files, found in %s", name, len(found["files"]), found["foundIn"])
         for path in found["files"]:

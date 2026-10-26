@@ -35,11 +35,38 @@ tested too. The run's log shows the same report.
 |---|---|---|
 | `FAIL_IF_MISSING` | `false` | Fail the run when an input has no files, instead of reporting it as missing |
 
+## Runtimes
+
+The image runs either way (`computeTypes: [standard, lambda]` in `app.yml`):
+
+- **standard** (the default): an ECS task. `INPUT_DIR`, `OUTPUT_DIR` and the
+  parameters are environment variables, and `main()` runs once.
+- **lambda**: a workflow step set to run as a Lambda function. Lambda sets
+  `AWS_LAMBDA_RUNTIME_API`, so `processor/entry.py` hands over to the Lambda
+  runtime interface client, and `processor/handler.py` takes `inputDir`,
+  `outputDir` and the parameters from the payload and runs the same `main()`.
+  A failed run raises, so the step fails.
+
+`report.json` says which it ran as (`runtime`: `container` or `lambda`).
+Compliant compute nodes refuse lambda steps, and a Lambda step gets no LLM
+sidecar.
+
 ## Running it locally
 
 ```sh
 make test   # Python, over sample-input/, printing the report
 make run    # the same in Docker
+```
+
+As a Lambda function, with the [runtime interface emulator](https://github.com/aws/aws-lambda-runtime-interface-emulator)
+(`aws-lambda-rie` for your machine's architecture) in the image's place:
+
+```sh
+docker build -t test-ports-processor .
+docker run --rm -p 9000:8080 -v "$PWD/sample-input:/in:ro" -v "$PWD/aws-lambda-rie:/rie:ro" \
+  --entrypoint /rie test-ports-processor python3 -m processor.entry
+curl -XPOST localhost:9000/2015-03-31/functions/function/invocations \
+  -d '{"inputDir": "/in", "outputDir": "/tmp/out", "FAIL_IF_MISSING": "false"}'
 ```
 
 `sample-input/` has one file for each input, at the root.

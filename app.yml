@@ -12,8 +12,11 @@ application:
 runtime:
   cpu: 256
   memory: 512
+  # standard (ECS) by default; a workflow can run a step as a Lambda
+  # function instead (the image serves both, see processor/entry.py).
   computeTypes:
     - standard
+    - lambda
 parameters:
   - name: FAIL_IF_MISSING
     type: boolean
